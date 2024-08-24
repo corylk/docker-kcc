@@ -1,60 +1,58 @@
-FROM ghcr.io/linuxserver/baseimage-guacgui:6be0127d-ls90
-
-
-# set version label
-LABEL maintainer="StudioEtrange <sboucault@gmail.com>"
+FROM ghcr.io/linuxserver/baseimage-kasmvnc:ubuntunoble
 
 # environment settings
-ARG DEBIAN_FRONTEND="noninteractive"
-ENV PYTHONIOENCODING=utf-8
-ENV APPNAME="KCC" UMASK_SET="022"
-ENV QT_DEBUG_PLUGINS 1
+ENV \
+       TITLE="KCC" \
+       CUSTOM_PORT="8080" \
+       HOME="/config" \
+       PIP_BREAK_SYSTEM_PACKAGES=1 \
+       QTWEBENGINE_DISABLE_SANDBOX="1" \
+       REPO_GIT="https://github.com/ciromattia/kcc" \
+       KCC_VERSION="master"
 
-ENV REPO_GIT "https://github.com/ciromattia/kcc"
-ENV KCC_VERSION "master"
+# install system dependencies
+RUN apt-get update
+RUN apt-get install -y \
+       gcc \
+       cmake \
+       unzip \
+       unrar \
+       p7zip-full \
+       p7zip-rar \
+       libpng-dev \
+       libjpeg-dev \
+       git \
+       wget \
+       libnss3 \
+       libopengl0 \
+       libxkbcommon-x11-0 \
+       libxcb-cursor0 \
+       libxcb-icccm4 \
+       libxcb-image0 \
+       libxcb-keysyms1 \
+       libxcb-randr0 \
+       libxcb-render-util0 \
+       libxcb-xinerama0 \
+       python3 \
+       python3-xdg \
+       python3-pip \
+       python3-dev
 
-RUN \
- echo "**** install packages ****" && \
- apt-get update && \
- apt-get install -y \
-        python3 \
-        python3-distutils \
-        python3-dev \
-        gcc \
-    	 unzip \
-        unrar \
-        p7zip-full \
-        # add suport for rar from 7z - solve https://github.com/ciromattia/kcc/issues/332
-        p7zip-rar \
-        libpng-dev \
-        libjpeg-dev \
-        git \
-        wget \
-        libxcb-xinerama0 \
-        libqt5x11extras5 && \
- echo "**** install pip ****" && \
- curl -fkSL https://bootstrap.pypa.io/pip/3.6/get-pip.py -o get-pip.py && \
- python3 get-pip.py && \
- ln -s \
-        /usr/bin/python3 \
-        /usr/bin/python && \
- echo "**** cleanup ****" && \
- apt-get clean && \
- rm -rf \
-        /tmp/* \
-        /var/lib/apt/lists/* \
-        /var/tmp/*
-
-# RUN \
-#  echo "**** install kindlegen ****" && \
-#  wget -O /tmp/kindlegen.tar.gz "https://github.com/Technosoft2000/docker-calibre-web/releases/download/kindlegen/kindlegen_linux_2.6_i386_v2_9.tar.gz" && \
-#  tar zxvf /tmp/kindlegen.tar.gz -C /usr/local/bin
-
+# install kindlegen
 COPY files/ /tmp
-RUN \
- echo "**** install kindlegen ****" && \
- tar zxvf /tmp/kindlegen*tar.gz -C /usr/local/bin
+RUN tar zxvf /tmp/kindlegen*tar.gz -C /usr/local/bin
 
+# clean up
+RUN  apt-get clean && \
+       rm -rf \
+              /tmp/* \
+              /var/lib/apt/lists/* \
+              /var/tmp/*
 
-# add local files
-COPY root/ /
+# install KCC
+WORKDIR /app
+RUN git clone https://github.com/ciromattia/kcc.git .
+RUN pip install -r requirements.txt
+
+# set autostart default
+RUN echo "python3 /app/kcc.py" >  /defaults/autostart
