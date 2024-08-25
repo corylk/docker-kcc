@@ -5,10 +5,11 @@ ENV \
        TITLE="KCC" \
        CUSTOM_PORT="8080" \
        HOME="/config" \
+       NO_DECOR=1 \
        PIP_BREAK_SYSTEM_PACKAGES=1 \
        QTWEBENGINE_DISABLE_SANDBOX="1" \
-       REPO_GIT="https://github.com/ciromattia/kcc" \
-       KCC_VERSION="master"
+       GIT_REPO="https://github.com/ciromattia/kcc" \
+       GIT_BRANCH="master"
 
 # install system dependencies
 RUN apt-get update
@@ -22,7 +23,6 @@ RUN apt-get install -y \
        libpng-dev \
        libjpeg-dev \
        git \
-       wget \
        libnss3 \
        libopengl0 \
        libxkbcommon-x11-0 \
@@ -42,17 +42,23 @@ RUN apt-get install -y \
 COPY files/ /tmp
 RUN tar zxvf /tmp/kindlegen*tar.gz -C /usr/local/bin
 
+# install KCC
+WORKDIR /app
+RUN git clone -b $GIT_BRANCH $GIT_REPO .
+RUN pip install -r requirements.txt
+
 # clean up
+RUN  apt-get remove -y \
+       gcc \
+       cmake \
+       git \
+       python3-pip \
+       python3-dev
 RUN  apt-get clean && \
        rm -rf \
               /tmp/* \
               /var/lib/apt/lists/* \
               /var/tmp/*
-
-# install KCC
-WORKDIR /app
-RUN git clone https://github.com/ciromattia/kcc.git .
-RUN pip install -r requirements.txt
 
 # set autostart default
 RUN echo "python3 /app/kcc.py" >  /defaults/autostart
