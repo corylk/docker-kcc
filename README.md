@@ -39,7 +39,6 @@ services:
     image: ckleinsc/kcc
     container_name: kcc
     environment:
-      - NO_DECOR=1
       - REPO_GIT=https://github.com/ciromattia/kcc
       - KCC_VERSION=master
     volumes:
