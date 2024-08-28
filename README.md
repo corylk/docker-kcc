@@ -39,8 +39,8 @@ services:
     image: ckleinsc/kcc
     container_name: kcc
     environment:
-      - REPO_GIT=https://github.com/ciromattia/kcc
-      - KCC_VERSION=master
+      - GIT_REPO=https://github.com/ciromattia/kcc
+      - GIT_BRANCH=master
     volumes:
       - /path/to/config:/config
     ports:
